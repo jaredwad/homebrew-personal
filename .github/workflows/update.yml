@@ -1,0 +1,54 @@
+name: Update casks
+
+on:
+  schedule:
+    - cron: "23 9 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-casks
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    env:
+      HOMEBREW_GITHUB_API_TOKEN: ${{ github.token }}
+      HOMEBREW_NO_AUTO_UPDATE: "1"
+      HOMEBREW_NO_ANALYTICS: "1"
+      HOMEBREW_DEVELOPER: "1"
+    steps:
+      - name: Set up Homebrew and check out tap
+        id: setup
+        uses: Homebrew/actions/setup-homebrew@e99025eb970cfa124b8284a35463d87426917478
+        with:
+          stable: true
+          token: ${{ github.token }}
+
+      - name: Trust this tap
+        run: brew trust --tap jaredwad/personal
+
+      - name: Check releases and update versions and checksums
+        working-directory: ${{ steps.setup.outputs.repository-path }}
+        run: python3 scripts/update-casks.py
+
+      - name: Check cask style
+        working-directory: ${{ steps.setup.outputs.repository-path }}
+        run: brew style Casks
+
+      - name: Commit and push updated casks
+        working-directory: ${{ steps.setup.outputs.repository-path }}
+        run: |
+          git add Casks
+          if git diff --cached --quiet; then
+            echo "All casks are current."
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Update casks to latest upstream releases'
+          git push origin HEAD:main
