@@ -24,6 +24,11 @@ brew outdated --cask
 brew upgrade --cask
 ```
 
+For a single app, use `brew upgrade --cask jaredwad/personal/alacritty`.
+An unqualified `brew upgrade alacritty` resolves the disabled official cask,
+even though the installed copy belongs to this tap. Bulk upgrades use the
+installed tap correctly.
+
 Alacritty is not Apple-notarized. If macOS blocks it, approve this specific app
 using System Settings > Privacy & Security > Open Anyway after attempting to
 launch it, provided you trust its source. This tap does not remove quarantine or

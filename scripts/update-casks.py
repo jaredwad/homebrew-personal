@@ -11,11 +11,9 @@ def main():
     result = subprocess.run(
         ["brew", "livecheck", f"--tap={TAP}", "--cask", "--json"],
         check=True,
-        capture_output=True,
+        stdout=subprocess.PIPE,
         text=True,
     )
-    if result.stderr:
-        print(result.stderr, end="")
 
     for package in json.loads(result.stdout):
         name = package["cask"].rsplit("/", 1)[-1]
